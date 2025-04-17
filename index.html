@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Attendance System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .qr-img {
+            max-width: 600px; /* Increased from 300px */
+            margin: 20px 0; /* Reduced margin to keep it centered */
+            height: auto; /* Maintain aspect ratio, remove fixed height to avoid distortion */
+        }
+        #status {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">Smart Attendance QR</h1>
+        <img src="{{ qr_path }}" alt="QR Code" class="qr-img">
+        <p id="status">Scan within 15 minutes</p>
+        <form method="POST" action="/generate">
+            <button type="submit" class="btn btn-primary">Generate New QR</button>
+        </form>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function checkQRStatus() {
+            fetch('/check_qr')
+                .then(response => response.json())
+                .then(data => {
+                    const status = document.getElementById('status');
+                    if (data.valid) {
+                        const minutes = Math.floor(data.time_left / 60);
+                        const seconds = (data.time_left % 60).toString().padStart(2, '0');
+                        status.textContent = `Scan within ${minutes}:${seconds}`;
+                        status.style.color = '#28a745';
+                    } else {
+                        status.textContent = 'QR Code Expired! Generating new QR...';
+                        status.style.color = '#dc3545';
+                        fetch('/generate', { method: 'POST' }) // Auto-generate new QR if expired
+                            .then(() => location.reload()); // Reload to show new QR
+                    }
+                })
+                .catch(error => console.error('QR check failed:', error));
+        }
+        setInterval(checkQRStatus, 1000);
+        checkQRStatus();
+    </script>
+</body>
+</html>
