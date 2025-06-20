@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Attendance System - Login/Sign Up</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .auth-card {
+            max-width: 450px;
+            width: 100%;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: white;
+        }
+        .form-toggle {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-toggle button {
+            width: 50%;
+            border-radius: 0;
+            border-bottom: 2px solid transparent;
+        }
+        .form-toggle button.active {
+            border-bottom-color: #007bff;
+            font-weight: bold;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .error-message {
+            color: red;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-card">
+        <h2 class="text-center mb-4">Smart Attendance System</h2>
+        <div class="form-toggle">
+            <button class="btn active" onclick="showForm('login')">Login</button>
+            <button class="btn" onclick="showForm('signup')">Sign Up</button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="login-form" action="/login" method="POST">
+            <div class="form-group">
+                <label for="login-email">Email</label>
+                <input type="email" class="form-control" id="login-email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="login-password">Password</label>
+                <input type="password" class="form-control" id="login-password" name="password" required>
+            </div>
+            <div class="error-message" id="login-error">{{ login_error }}</div>
+            <button type="submit" class="btn btn-primary w-100">Login</button>
+            <div class="text-center mt-3">
+                <a href="/forgot-password">Forgot Password?</a>
+            </div>
+        </form>
+
+        <!-- Sign-Up Form -->
+        <form id="signup-form" action="/register" method="POST" style="display: none;">
+            <div class="form-group">
+                <label for="role">Role</label>
+                <select class="form-control" id="role" name="role" onchange="toggleFields()" required>
+                    <option value="student">Student</option>
+                    <option value="teacher">Teacher</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="signup-email">Email</label>
+                <input type="email" class="form-control" id="signup-email" name="email" placeholder="name@university.com" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="tel" class="form-control" id="phone" name="phone" pattern="[0-9]{10}" required>
+            </div>
+            <div class="form-group">
+                <label for="signup-password">Password</label>
+                <input type="password" class="form-control" id="signup-password" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="department">Department</label>
+                <select class="form-control" id="department" name="department_id" required>
+                    {% for dept in departments %}
+                        <option value="{{ dept.department_id }}">{{ dept.department_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" id="student-year" style="display: block;">
+                <label for="year">Year</label>
+                <select class="form-control" id="year" name="year">
+                    <option value="1">1st Year</option>
+                    <option value="2">2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4">4th Year</option>
+                </select>
+            </div>
+            <div class="form-group" id="names" style="display: none;">
+                <label for="first_name">First Name</label>
+                <input type="text" class="form-control" id="first_name" name="first_name">
+                <label for="last_name">Last Name</label>
+                <input type="text" class="form-control" id="last_name" name="last_name">
+            </div>
+            <div class="error-message" id="signup-error">{{ signup_error }}</div>
+            <button type="submit" class="btn btn-primary w-100">Sign Up</button>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showForm(formType) {
+            const loginForm = document.getElementById('login-form');
+            const signupForm = document.getElementById('signup-form');
+            const loginBtn = document.querySelector('.form-toggle button:first-child');
+            const signupBtn = document.querySelector('.form-toggle button:last-child');
+
+            if (formType === 'login') {
+                loginForm.style.display = 'block';
+                signupForm.style.display = 'none';
+                loginBtn.classList.add('active');
+                signupBtn.classList.remove('active');
+            } else {
+                loginForm.style.display = 'none';
+                signupForm.style.display = 'block';
+                loginBtn.classList.remove('active');
+                signupBtn.classList.add('active');
+            }
+        }
+
+        function toggleFields() {
+            const role = document.getElementById('role').value;
+            const yearField = document.getElementById('student-year');
+            const namesField = document.getElementById('names');
+            const yearSelect = document.getElementById('year');
+            const firstNameInput = document.getElementById('first_name');
+            const lastNameInput = document.getElementById('last_name');
+
+            yearField.style.display = role === 'student' ? 'block' : 'none';
+            namesField.style.display = role !== 'student' ? 'block' : 'none';
+            yearSelect.required = role === 'student';
+            firstNameInput.required = role !== 'student';
+            lastNameInput.required = role !== 'student';
+        }
+
+        const loginError = document.getElementById('login-error').textContent;
+        const signupError = document.getElementById('signup-error').textContent;
+        if (loginError) document.getElementById('login-error').style.display = 'block';
+        if (signupError) document.getElementById('signup-error').style.display = 'block';
+    </script>
+</body>
+</html>
